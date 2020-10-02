@@ -22,10 +22,16 @@ Adafruit_BME280 bme;
 
 const unsigned long CHECK_PERIOD_MS = 2000;
 unsigned long lastCheck = 0;
-int useCaseState(int input); // useCase 1 = Cold Chain(temp/humid), useCase 2 (AQM) = , useCase 3 = (pressure) 
+
+#define ColdChain 1
+#define Truck 2
+#define Rail 3
+int useCaseVal = 0; // 1 = cold chain, 2= truck, 3= rail
+int useCaseState(String input); // forward definition for .cpp
 
 
-void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context); // Forward declaration :)
+
+void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context); 
 
 
 void setup()
@@ -36,7 +42,7 @@ void setup()
 
     bme.begin();
 
-    Particle.function("Switch Case", useCaseState);
+    Particle.function("useCase", useCaseState);
 
     Tracker::instance().location.regLocGenCallback(locationGenerationCallback);
 
@@ -56,68 +62,102 @@ void loop()
     }
 }
 
+int useCaseState(String command)
+{
+  if(command == "cold chain")
+  {
+      useCaseVal = ColdChain;
+  }
+  if(command == "truck")
+  {
+      useCaseVal = Truck;
+  }
+  if(command == "rail car")
+  {
+      useCaseVal = Rail;
+  }
+}
+
 void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context)
 {
-    callback (input){ // not sure i need this
-        parseFunction();
-    }
+
+int temp = (int)bme.readTemperature();
+int humidity = (int)bme.readHumidity();   
+int pressure = (int)(bme.readPressure() / 100.0F);
+int quality = aqSensor.slope();
+String qual = "None";
+
+
+
+switch (useCaseVal) {
+        case ColdChain:
+            writer.name("Temperature").value(temp, 1); 
+            writer.name("Humidity").value(humidity, 1);
+        break;
+        case Truck:
+            if (quality == AirQualitySensor::FORCE_SIGNAL)
+            {
+                qual = "Danger";
+            }
+            else if (quality == AirQualitySensor::HIGH_POLLUTION)
+            {
+                qual = "High Pollution";
+            }
+            else if (quality == AirQualitySensor::LOW_POLLUTION)
+            {
+                qual = "Low Pollution";
+            }
+            else if (quality == AirQualitySensor::FRESH_AIR)
+            {
+                qual = "Fresh Air";
+            }
+
+            // Write AQ under Device Page
+            writer.name("Quality").value(qual, 16); 
+        break;
+        case Rail:
+            writer.name("Pressure").value(pressure, 1);
+            writer.name("Humidity").value(humidity, 1);
+        break;
+    }   
+}
+
+
+
+// void coldChain (){
+
+
+
+// }
+
+// void railCar (){
+
+
+// }
+
+// void heavyTrucking(){
+
+
+
+//   switch (quality) {
+//     case AirQualitySensor::FORCE_SIGNAL:
+//       strncpy(qual, "Danger", sizeof(qual));
+//       break;
+
+//     case AirQualitySensor::HIGH_POLLUTION:
+//       strncpy(qual, "High Pollution", sizeof(qual));
+//       break;
+
+//     case AirQualitySensor::LOW_POLLUTION:
+//       strncpy(qual, "Low Pollution", sizeof(qual));
+//       break;
+
+//     case AirQualitySensor::FRESH_AIR:
+//       strncpy(qual, "Fresh Air", sizeof(qual));
+//       break;
     
-}
-// Should void be added here? is the switch case right, when 1 is called in function useCaseState the device will adpot coldChian method
-void parseFunction (input){
-    switch (useCaseState){ 
-        case 1: coldChain() 
-        break;
-
-        case 2: railCar() 
-        break;
-
-        case 3: heavyTrucking()
-        break;
-    }
-}
-
-
-
-
-void coldChain (){
-    int temp = (int)bme.readTemperature();
-    int humidity = (int)bme.readHumidity();
-
-    writer.name("Temperature").value(temp, 1); 
-    writer.name("Humidity").value(humidity, 1);
-}
-
-void railCar (){
-    int pressure = (int)(bme.readPressure() / 100.0F);
-    int humidity = (int)bme.readHumidity();
-
-    writer.name("Pressure").value(pressure, 1);
-    writer.name("Humidity").value(humidity, 1);
-}
-
-void heavyTrucking(){
-
-    int quality = aqSensor.slope();
-    String qual = "None";
-
-    if (quality == AirQualitySensor::FORCE_SIGNAL)
-    {
-        qual = "Danger";
-    }
-    else if (quality == AirQualitySensor::HIGH_POLLUTION)
-    {
-        qual = "High Pollution";
-    }
-    else if (quality == AirQualitySensor::LOW_POLLUTION)
-    {
-        qual = "Low Pollution";
-    }
-    else if (quality == AirQualitySensor::FRESH_AIR)
-    {
-        qual = "Fresh Air";
-    }
-
-    // Where do i add writer, does it only work in location call back?
-    writer.name("Quality").value(qual, 15); 
-}
+//     default:
+//       strncpy(qual, "None", sizeof(qual));
+//   }
+//   writer.name("Quality").value(qual, sizeof(qual));
+// }
