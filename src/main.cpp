@@ -24,9 +24,9 @@ const unsigned long CHECK_PERIOD_MS = 2000;
 unsigned long lastCheck = 0;
 
 #define ColdChain 1
-#define Truck 2
-#define Rail 3
-int useCaseVal = 0; // 1 = cold chain, 2= truck, 3= rail
+#define Chemical 2
+#define Heavy 3
+int useCaseVal = 0; // 1 = cold chain, 2= chemical, 3= heavy
 int useCaseState(String input); // forward definition for .cpp
 
 
@@ -68,14 +68,14 @@ int useCaseState(String command)
   {
       useCaseVal = ColdChain;
   }
-  if(command == "truck")
+  if(command == "chemical")
   {
-      useCaseVal = Truck;
+      useCaseVal = Chemical;
   }
-  if(command == "rail car")
-  {
-      useCaseVal = Rail;
-  }
+//   if(command == "heavy")
+//   {
+//       useCaseVal = Heavy;
+//   }
 }
 
 void locationGenerationCallback(JSONWriter &writer, LocationPoint &point, const void *context)
@@ -85,16 +85,28 @@ int temp = (int)bme.readTemperature();
 int humidity = (int)bme.readHumidity();   
 int pressure = (int)(bme.readPressure() / 100.0F);
 int quality = aqSensor.slope();
+// String temp2 = "THIS IS THE CURRENT TEMPERATURE" + temp;
 String qual = "None";
-
-
 
 switch (useCaseVal) {
         case ColdChain:
+            // if (temp >= 20 ){
+            //     Particle.publish("High temp");
+            // }
+            // if (temp == 19){
+            //     Particle.publish("Good Temp");
+            // }
+            // if (temp <= 19){
+            //     Particle.publish("Low Temp");
+            // }
+
             writer.name("Temperature").value(temp, 1); 
             writer.name("Humidity").value(humidity, 1);
+
+            
+            // Particle.publish("awsEmail", "This is the message" , 60, PRIVATE);
         break;
-        case Truck:
+        case Chemical:
             if (quality == AirQualitySensor::FORCE_SIGNAL)
             {
                 qual = "Danger";
@@ -113,51 +125,13 @@ switch (useCaseVal) {
             }
 
             // Write AQ under Device Page
-            writer.name("Quality").value(qual, 16); 
+            writer.name("Temperature").value(temp, 1);
+            writer.name("Humidity").value(humidity, 1); 
+            writer.name("Quality").value(qual, 16);
+
         break;
-        case Rail:
-            writer.name("Pressure").value(pressure, 1);
-            writer.name("Humidity").value(humidity, 1);
-        break;
+        // case Heavy:
+        //     writer.name("Pressure").value(pressure, 1);
+        // break;
     }   
 }
-
-
-
-// void coldChain (){
-
-
-
-// }
-
-// void railCar (){
-
-
-// }
-
-// void heavyTrucking(){
-
-
-
-//   switch (quality) {
-//     case AirQualitySensor::FORCE_SIGNAL:
-//       strncpy(qual, "Danger", sizeof(qual));
-//       break;
-
-//     case AirQualitySensor::HIGH_POLLUTION:
-//       strncpy(qual, "High Pollution", sizeof(qual));
-//       break;
-
-//     case AirQualitySensor::LOW_POLLUTION:
-//       strncpy(qual, "Low Pollution", sizeof(qual));
-//       break;
-
-//     case AirQualitySensor::FRESH_AIR:
-//       strncpy(qual, "Fresh Air", sizeof(qual));
-//       break;
-    
-//     default:
-//       strncpy(qual, "None", sizeof(qual));
-//   }
-//   writer.name("Quality").value(qual, sizeof(qual));
-// }

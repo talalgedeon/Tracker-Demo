@@ -1,0 +1,16 @@
+{
+  "eventName": "awsEmail",
+  "url": "https://wmgt1mbu3l.execute-api.us-east-1.amazonaws.com/test",
+  "requestType": "POST",
+  "headers": {
+    "x-api-key": "UDK8j38TGh1FPYU5egmZa2FbyOtT9joJ8cIHbDn1",
+    "Content-Type": "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+ },
+  "query": {
+    "Subject": "{{PARTICLE_EVENT_NAME}}",
+    "Message": "{{PARTICLE_EVENT_NAME}}",
+    "TopicArn": "arn:aws:sns:us-east-1:005905742322:Temperature"
+  },
+  "mydevices": true,
+  "noDefaults": true
+}
